@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{0DD137
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegexParser.Tests", "RegexParser.Tests\RegexParser.Tests.csproj", "{BA77140C-399C-4B49-9596-48FDC391206A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{62AA69A1-65D2-4C33-94B4-209133F11939}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62AA69A1-65D2-4C33-94B4-209133F11939}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{62AA69A1-65D2-4C33-94B4-209133F11939}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA77140C-399C-4B49-9596-48FDC391206A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA77140C-399C-4B49-9596-48FDC391206A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA77140C-399C-4B49-9596-48FDC391206A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA77140C-399C-4B49-9596-48FDC391206A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
