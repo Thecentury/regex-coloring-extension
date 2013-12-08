@@ -1,0 +1,12 @@
+syntax: glob
+*/bin/Debug/*
+*/obj/Debug/*
+*.v11.suo
+*.DotSettings.user
+packages/*
+*.csproj.user
+*.suo
+*/obj/*
+*.sln.ide/*
+*.csproj.DotSettings
+*/AutoTest.Net/*
