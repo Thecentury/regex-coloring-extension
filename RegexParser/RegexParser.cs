@@ -59,6 +59,11 @@ namespace RegexParsing
 	public sealed class SingleChar : ListItem
 	{
 		public char Value { get; set; }
+
+		public override string ToString()
+		{
+			return Value.ToString();
+		}
 	}
 
 	public sealed class CharRange : ListItem
@@ -69,7 +74,7 @@ namespace RegexParsing
 
 		public override string ToString()
 		{
-			return String.Format( "{0}-{1}", Start, End );
+			return String.Format( "Range {0}-{1}", Start, End );
 		}
 	}
 
