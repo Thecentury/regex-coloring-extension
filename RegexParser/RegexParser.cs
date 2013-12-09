@@ -19,10 +19,22 @@ namespace RegexParsing
 			return Parser.Parse( regex );
 		}
 
-		private static readonly Parser<VerbatimString> Verbatim =
+		private static readonly Parser<RegexToken> Verbatim =
 			Parse.AnyChar.AtLeastOnce().Text().Select( s => new VerbatimString { Value = s } );
 
-		private static readonly Parser<List<RegexToken>> Parser = Verbatim.Many().Select( e => e.Cast<RegexToken>().ToList() ).End();
+		private static readonly Parser<ListItem> Range =
+			from start in Parse.AnyChar
+			from delimiter in Parse.Char( '-' )
+			from end in Parse.AnyChar
+			select new CharRange { Start = start, End = end };
+
+		private static readonly Parser<RegexToken> CharList =
+			from open in Parse.Char( '[' )
+			from inner in Range.Or( Parse.Char( c => c != ']', "not ]" ).Select( c => new SingleChar { Value = c } ) ).AtLeastOnce()
+			from close in Parse.Char( ']' )
+			select new CharList { Items = inner.ToList() };
+
+		private static readonly Parser<List<RegexToken>> Parser = CharList.Or( Verbatim ).Many().Select( e => e.ToList() ).End();
 	}
 
 	public abstract class RegexToken
@@ -30,8 +42,44 @@ namespace RegexParsing
 
 	}
 
+	public abstract class ListItem
+	{
+	}
+
+	public sealed class CharList : RegexToken
+	{
+		public List<ListItem> Items { get; set; }
+
+		public override string ToString()
+		{
+			return String.Format( "[{0}]", String.Join( "", Items ) );
+		}
+	}
+
+	public sealed class SingleChar : ListItem
+	{
+		public char Value { get; set; }
+	}
+
+	public sealed class CharRange : ListItem
+	{
+		public char Start { get; set; }
+
+		public char End { get; set; }
+
+		public override string ToString()
+		{
+			return String.Format( "{0}-{1}", Start, End );
+		}
+	}
+
 	public sealed class VerbatimString : RegexToken
 	{
 		public string Value { get; set; }
+
+		public override string ToString()
+		{
+			return String.Format( "\"{0}\"", Value );
+		}
 	}
 }
