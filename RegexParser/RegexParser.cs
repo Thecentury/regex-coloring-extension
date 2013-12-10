@@ -30,9 +30,10 @@ namespace RegexParsing
 
 		private static readonly Parser<RegexToken> CharList =
 			from open in Parse.Char( '[' )
+			from exclude in Parse.Char( '^' ).Optional()
 			from inner in Range.Or( Parse.Char( c => c != ']', "not ]" ).Select( c => new SingleChar { Value = c } ) ).AtLeastOnce()
 			from close in Parse.Char( ']' )
-			select new CharList { Items = inner.ToList() };
+			select new CharList { Items = inner.ToList(), Exclude = exclude.IsDefined };
 
 		private static readonly Parser<List<RegexToken>> Parser = CharList.Or( Verbatim ).Many().Select( e => e.ToList() ).End();
 	}
@@ -48,6 +49,8 @@ namespace RegexParsing
 
 	public sealed class CharList : RegexToken
 	{
+		public bool Exclude { get; set; }
+
 		public List<ListItem> Items { get; set; }
 
 		public override string ToString()
