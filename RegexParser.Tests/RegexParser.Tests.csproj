@@ -55,6 +55,10 @@
       <Project>{62aa69a1-65d2-4c33-94b4-209133f11939}</Project>
       <Name>RegexParser</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Sprache\Sprache.csproj">
+      <Project>{df5fe6f0-5abe-4363-9184-eb6ef64f0f61}</Project>
+      <Name>Sprache</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />

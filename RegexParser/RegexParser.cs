@@ -20,31 +20,56 @@ namespace RegexParsing
 		}
 
 		private static readonly Parser<RegexToken> Verbatim =
-			Parse.AnyChar.AtLeastOnce().Text().Select( s => new VerbatimString { Value = s } );
+			Parse.AnyChar.AtLeastOnce().Text().Select( s => new VerbatimString { Value = s } ).Positioned();
 
 		private static readonly Parser<ListItem> Range =
-			from start in Parse.AnyChar
-			from delimiter in Parse.Char( '-' )
-			from end in Parse.AnyChar
-			select new CharRange { Start = start, End = end };
+			( from start in Parse.AnyChar
+			  from delimiter in Parse.Char( '-' )
+			  from end in Parse.AnyChar
+			  select new CharRange { Start = start, End = end } ).Positioned();
 
 		private static readonly Parser<RegexToken> CharList =
-			from open in Parse.Char( '[' )
-			from exclude in Parse.Char( '^' ).Optional()
-			from inner in Range.Or( Parse.Char( c => c != ']', "not ]" ).Select( c => new SingleChar { Value = c } ) ).AtLeastOnce()
-			from close in Parse.Char( ']' )
-			select new CharList { Items = inner.ToList(), Exclude = exclude.IsDefined };
+			( from open in Parse.Char( '[' )
+			  from exclude in Parse.Char( '^' ).Optional()
+			  from inner in Range.Or( Parse.Char( c => c != ']', "not ]" ).Select( c => new SingleChar { Value = c } ) ).Positioned().AtLeastOnce()
+			  from close in Parse.Char( ']' )
+			  select new CharList { Items = inner.ToList(), Exclude = exclude.IsDefined } ).Positioned();
 
 		private static readonly Parser<List<RegexToken>> Parser = CharList.Or( Verbatim ).Many().Select( e => e.ToList() ).End();
 	}
 
-	public abstract class RegexToken
+	public abstract class RegexToken : IPositionAware
 	{
+		private Position _position;
+		private int _length;
 
+		public Position Position
+		{
+			get { return _position; }
+		}
+
+		public int Length
+		{
+			get { return _length; }
+		}
+
+		public void SetPos( Position startPos, int length )
+		{
+			_position = startPos;
+			_length = length;
+		}
 	}
 
-	public abstract class ListItem
+	public abstract class ListItem : IPositionAware
 	{
+		private Position _position;
+		private int _length;
+
+		public void SetPos( Position startPos, int length )
+		{
+			_position = startPos;
+			_length = length;
+		}
 	}
 
 	public sealed class CharList : RegexToken
@@ -57,6 +82,14 @@ namespace RegexParsing
 		{
 			return String.Format( "[{0}]", String.Join( "", Items ) );
 		}
+	}
+
+	public class Quantifier : RegexToken
+	{
+		public int MinAmount { get; set; }
+
+		public int MaxAmount { get; set; }
+
 	}
 
 	public sealed class SingleChar : ListItem
