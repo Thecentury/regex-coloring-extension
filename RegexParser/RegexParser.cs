@@ -19,14 +19,31 @@ namespace RegexParsing
 			return Parser.Parse( regex );
 		}
 
+		private static readonly char[] _charsToEscape = { '.', '$', '^', '{', '[', '(', '|', ')', '*', '+', '?', '\\' };
+
 		private static readonly Parser<RegexToken> Verbatim =
-			Parse.AnyChar.AtLeastOnce().Text().Select( s => new VerbatimString { Value = s } ).Positioned();
+			Parse.Char( c => !_charsToEscape.Contains( c ), "Common characters" ).AtLeastOnce().Text().Select( s => new VerbatimString { Value = s } ).Positioned();
 
 		private static readonly Parser<ListItem> Range =
 			( from start in Parse.AnyChar
 			  from delimiter in Parse.Char( '-' )
 			  from end in Parse.AnyChar
 			  select new CharRange { Start = start, End = end } ).Positioned();
+
+		private static readonly Parser<int> Integer = Parse.Number.Select( d => Int32.Parse( d ) );
+
+		private static readonly Parser<RegexToken> Quantifier =
+			Parse.Char( '*' ).Return( new Quantifier { MinAmount = 0 } )
+				.Or( Parse.Char( '+' ).Return( new Quantifier { MinAmount = 1 } ) )
+				.Or( Parse.Char( '?' ).Return( new Quantifier { MinAmount = 0, MaxAmount = 1 } ) )
+				.Or(
+					from openBracket in Parse.Char( '{' )
+					from min in Integer.Optional()
+					from comma in Parse.Char( ',' )
+					from max in Integer.Optional()
+					from closeBracket in Parse.Char( '}' )
+					select new Quantifier { MinAmount = min.GetOrDefault(), MaxAmount = max.AsNullable() }
+				).Positioned();
 
 		private static readonly Parser<RegexToken> CharList =
 			( from open in Parse.Char( '[' )
@@ -35,7 +52,55 @@ namespace RegexParsing
 			  from close in Parse.Char( ']' )
 			  select new CharList { Items = inner.ToList(), Exclude = exclude.IsDefined } ).Positioned();
 
-		private static readonly Parser<List<RegexToken>> Parser = CharList.Or( Verbatim ).Many().Select( e => e.ToList() ).End();
+		private static readonly Parser<RegexToken> Quantifiable = CharList.Or( Verbatim );
+
+		private static IEnumerable<T> AsEnumerable<T>( T t1, IOption<T> t2 )
+		{
+			yield return t1;
+
+			if ( t2.IsDefined )
+			{
+				yield return t2.Get();
+			}
+		}
+
+		private static readonly Parser<IEnumerable<RegexToken>> QuantifiableWithOptionalQuantifier =
+			from obj in Quantifiable
+			from q in Quantifier.Optional()
+			select AsEnumerable( obj, q );
+
+		private static readonly Parser<IEnumerable<RegexToken>> Quantified =
+			QuantifiableWithOptionalQuantifier.Many().Select( ts => ts.SelectMany( t => t ) );
+
+		private static readonly Parser<List<RegexToken>> Parser = Quantified.Select( e => e.ToList() ).End();
+	}
+
+	public static class ParserExtensions
+	{
+		public static Parser<TCasted> Cast<T, TCasted>( this Parser<T> parser ) where T : TCasted
+		{
+			return i =>
+			{
+				IResult<T> result = parser( i );
+
+				if ( result.WasSuccessful )
+				{
+					return Result.Success<TCasted>( result.Value, result.Remainder );
+				}
+				else
+				{
+					return Result.Failure<TCasted>( result.Remainder, result.Message, result.Expectations );
+				}
+			};
+		}
+	}
+
+	public static class OptionExtensions
+	{
+		public static T? AsNullable<T>( this IOption<T> option ) where T : struct
+		{
+			return option.IsEmpty ? new T?() : option.Get();
+		}
 	}
 
 	public abstract class RegexToken : IPositionAware
@@ -88,8 +153,7 @@ namespace RegexParsing
 	{
 		public int MinAmount { get; set; }
 
-		public int MaxAmount { get; set; }
-
+		public int? MaxAmount { get; set; }
 	}
 
 	public sealed class SingleChar : ListItem
