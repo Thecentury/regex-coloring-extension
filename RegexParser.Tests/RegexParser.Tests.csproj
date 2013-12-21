@@ -35,6 +35,10 @@
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
     </Reference>
+    <Reference Include="Sprache, Version=1.10.0.35, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Sprache.1.10.0.35\lib\net40\Sprache.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -54,10 +58,6 @@
     <ProjectReference Include="..\RegexParser\RegexParser.csproj">
       <Project>{62aa69a1-65d2-4c33-94b4-209133f11939}</Project>
       <Name>RegexParser</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Sprache\Sprache.csproj">
-      <Project>{df5fe6f0-5abe-4363-9184-eb6ef64f0f61}</Project>
-      <Name>Sprache</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
