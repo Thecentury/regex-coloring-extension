@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Sprache;
 
 namespace RegexParsing
@@ -76,26 +74,6 @@ namespace RegexParsing
 		private static readonly Parser<List<RegexToken>> Parser = Quantified.Select( e => e.ToList() ).End();
 	}
 
-	public static class ParserExtensions
-	{
-		public static Parser<TCasted> Cast<T, TCasted>( this Parser<T> parser ) where T : TCasted
-		{
-			return i =>
-			{
-				IResult<T> result = parser( i );
-
-				if ( result.WasSuccessful )
-				{
-					return Result.Success<TCasted>( result.Value, result.Remainder );
-				}
-				else
-				{
-					return Result.Failure<TCasted>( result.Remainder, result.Message, result.Expectations );
-				}
-			};
-		}
-	}
-
 	public static class OptionExtensions
 	{
 		public static T? AsNullable<T>( this IOption<T> option ) where T : struct
@@ -104,7 +82,7 @@ namespace RegexParsing
 		}
 	}
 
-	public abstract class RegexToken : IPositionAware
+	public abstract class RegexToken : IImperativePositionAware
 	{
 		private Position _position;
 		private int _length;
@@ -126,7 +104,7 @@ namespace RegexParsing
 		}
 	}
 
-	public abstract class ListItem : IPositionAware
+	public abstract class ListItem : IImperativePositionAware
 	{
 		private Position _position;
 		private int _length;
