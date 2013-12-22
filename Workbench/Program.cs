@@ -11,7 +11,7 @@ namespace ConsoleApplication
     {
         static void Main(string[] args)
         {
-            var regex = new Regex("*abcdef[123]");
+            var regex = new Regex("abcdef[123]{2,3}");
         }
     }
 }
