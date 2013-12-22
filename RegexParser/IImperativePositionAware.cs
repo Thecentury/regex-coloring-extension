@@ -13,5 +13,9 @@ namespace RegexParsing
 		/// <param name="startPos">The start position</param>
 		/// <param name="length">The matched length.</param>
 		void SetPos( Position startPos, int length );
+
+		Position Position { get; }
+
+		int Length { get; }
 	}
 }

@@ -1,22 +1,29 @@
-﻿using System.Text.RegularExpressions;
-using System.Windows;
+﻿using System;
+using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Formatting;
+using RegexParsing;
 
 namespace RegexColoring.Extension
 {
+	public static class SpanExtensions
+	{
+		public static Span Shift( this Span span, int shift )
+		{
+			return new Span( span.Start + shift, span.Length );
+		}
+	}
+
 	///<summary>
-	///RegexColoring.Extension places red boxes behind all the "A"s in the editor window
+	/// RegexColoring.Extension places red boxes behind all the "A"s in the editor window
 	///</summary>
 	public class RegexColoringExtension
 	{
-		IAdornmentLayer _layer;
-		IWpfTextView _view;
-		Brush _brush;
-		Pen _pen;
+		private readonly IAdornmentLayer _layer;
+		private readonly IWpfTextView _view;
 
 		public RegexColoringExtension( IWpfTextView view )
 		{
@@ -25,17 +32,6 @@ namespace RegexColoring.Extension
 
 			//Listen to any event that changes the layout (text changes, scrolling, etc)
 			_view.LayoutChanged += OnLayoutChanged;
-
-			//Create the pen and brush to color the box behind the a's
-			Brush brush = new SolidColorBrush( Color.FromArgb( 0x20, 0x00, 0x00, 0xff ) );
-			brush.Freeze();
-			Brush penBrush = new SolidColorBrush( Colors.Red );
-			penBrush.Freeze();
-			Pen pen = new Pen( penBrush, 0.5 );
-			pen.Freeze();
-
-			_brush = brush;
-			_pen = pen;
 		}
 
 		/// <summary>
@@ -45,7 +41,7 @@ namespace RegexColoring.Extension
 		{
 			foreach ( ITextViewLine line in e.NewOrReformattedLines )
 			{
-				this.CreateVisuals( line );
+				CreateVisuals( line );
 			}
 		}
 
@@ -56,14 +52,12 @@ namespace RegexColoring.Extension
 		{
 			//grab a reference to the lines in the current TextView 
 			IWpfTextViewLineCollection textViewLines = _view.TextViewLines;
-			int start = line.Start;
-			int end = line.End;
 
 			var lineFromPosition = line.Snapshot.GetLineFromPosition( line.Start );
 			var text = lineFromPosition.GetText();
 
 			string pattern;
-			Span? patternSpan = RegexExtracter.TryExtractPatternSpan( text, out pattern );
+			Span? patternSpan = RegexExtractor.TryExtractPatternSpan( text, out pattern );
 
 			if ( patternSpan == null )
 			{
@@ -71,48 +65,67 @@ namespace RegexColoring.Extension
 			}
 
 			int shift = line.Start.Position;
-			Span shiftedSpan = Span.FromBounds( patternSpan.Value.Start + shift,
-				patternSpan.Value.End + shift );
+			Span shiftedSpan = patternSpan.Value.Shift( shift );
 
 			SnapshotSpan span = new SnapshotSpan( _view.TextSnapshot, shiftedSpan );
-			Geometry g = textViewLines.GetMarkerGeometry( span );
-			if ( g != null )
+
+			var result = RegexParser.TryParseRegex( pattern );
+			if ( !result.WasSuccessful )
 			{
-				GeometryDrawing drawing = new GeometryDrawing( _brush, _pen, g );
-				drawing.Freeze();
+				return;
+			}
+			var tokens = result.Value;
 
-				DrawingImage drawingImage = new DrawingImage( drawing );
-				drawingImage.Freeze();
+			var primitiveTokens = tokens.SelectMany( t => t.GetPrimitiveTokens() ).ToList();
 
-				Image image = new Image();
-				image.Source = drawingImage;
+			foreach ( var token in primitiveTokens )
+			{
+				var tokenSpan = new Span( token.Start, token.Length ).Shift( shiftedSpan.Start );
+				Geometry geometry = textViewLines.GetMarkerGeometry( new SnapshotSpan( _view.TextSnapshot, tokenSpan ) );
 
-				//Align the image with the top of the bounds of the text geometry
-				Canvas.SetLeft( image, g.Bounds.Left );
-				Canvas.SetTop( image, g.Bounds.Top );
+				if ( geometry != null )
+				{
+					var brush = Colorizer.GetBrushForToken( token.Kind );
+					GeometryDrawing drawing = new GeometryDrawing( brush, null, geometry );
+					drawing.Freeze();
 
-				_layer.AddAdornment( AdornmentPositioningBehavior.TextRelative, span, null, image, null );
+					DrawingImage drawingImage = new DrawingImage( drawing );
+					drawingImage.Freeze();
+
+					Image image = new Image { Source = drawingImage };
+
+					//Align the image with the top of the bounds of the text geometry
+					Canvas.SetLeft( image, geometry.Bounds.Left );
+					Canvas.SetTop( image, geometry.Bounds.Top );
+
+					_layer.AddAdornment( AdornmentPositioningBehavior.TextRelative, span, null, image, null );
+				}
 			}
 		}
 	}
 
-	internal static class RegexExtracter
+	public static class Colorizer
 	{
-		private static readonly Regex _regexPatternExtractor = new Regex( @"new\s*(?:System\.Text\.RegularExpressions\.|global::System\.Text\.RegularExpressions\.)?Regex\s*\(\s*""(?<pattern>.*)""\)", RegexOptions.Compiled );
-
-		public static Span? TryExtractPatternSpan( string line, out string pattern )
+		public static Brush GetBrushForToken( PrimitiveRegexTokenKind kind )
 		{
-			Match match = _regexPatternExtractor.Match( line );
-
-			if ( !match.Success )
+			switch ( kind )
 			{
-				pattern = null;
-				return null;
+				case PrimitiveRegexTokenKind.OpenSquareBracket:
+				case PrimitiveRegexTokenKind.CloseSquareBracket:
+				case PrimitiveRegexTokenKind.CharacterListNegation:
+					return Brushes.Aquamarine;
+				case PrimitiveRegexTokenKind.RepetitionsCount:
+					return Brushes.CornflowerBlue;
+				case PrimitiveRegexTokenKind.RangeStart:
+				case PrimitiveRegexTokenKind.RangeSymbol:
+				case PrimitiveRegexTokenKind.RangeEnd:
+				case PrimitiveRegexTokenKind.LiteralCharacter:
+					return Brushes.Orange;
+				case PrimitiveRegexTokenKind.LiteralString:
+					return Brushes.Transparent;
+				default:
+					throw new ArgumentOutOfRangeException( "kind" );
 			}
-
-			var group = match.Groups["pattern"];
-			pattern = @group.Value;
-			return Span.FromBounds( group.Index, group.Index + group.Length );
 		}
 	}
 }
