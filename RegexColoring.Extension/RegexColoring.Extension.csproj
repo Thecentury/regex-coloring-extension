@@ -74,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BrushExtensions.cs" />
+    <Compile Include="Colorizer.cs" />
     <Compile Include="RegexColoringExtensionFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegexColoringExtension.cs" />
