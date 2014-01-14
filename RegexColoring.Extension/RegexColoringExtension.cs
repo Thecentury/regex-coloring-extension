@@ -106,7 +106,15 @@ namespace RegexColoring.Extension
 
 	public static class Colorizer
 	{
+		private const double DefaultTransparency = 0.4;
+
 		public static Brush GetBrushForToken( PrimitiveRegexTokenKind kind )
+		{
+			var brush = GetBrushForTokenCore( kind ).WithTransparency( DefaultTransparency );
+			return brush;
+		}
+
+		private static SolidColorBrush GetBrushForTokenCore( PrimitiveRegexTokenKind kind )
 		{
 			switch ( kind )
 			{
