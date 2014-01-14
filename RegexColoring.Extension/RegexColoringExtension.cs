@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Microsoft.VisualStudio.Text;
@@ -92,7 +91,7 @@ namespace RegexColoring.Extension
 					DrawingImage drawingImage = new DrawingImage( drawing );
 					drawingImage.Freeze();
 
-					Image image = new Image { Source = drawingImage };
+					Image image = new Image { Source = drawingImage, ToolTip = token.Kind.ToString() };
 
 					//Align the image with the top of the bounds of the text geometry
 					Canvas.SetLeft( image, geometry.Bounds.Left );
@@ -100,39 +99,6 @@ namespace RegexColoring.Extension
 
 					_layer.AddAdornment( AdornmentPositioningBehavior.TextRelative, span, null, image, null );
 				}
-			}
-		}
-	}
-
-	public static class Colorizer
-	{
-		private const double DefaultTransparency = 0.4;
-
-		public static Brush GetBrushForToken( PrimitiveRegexTokenKind kind )
-		{
-			var brush = GetBrushForTokenCore( kind ).WithTransparency( DefaultTransparency );
-			return brush;
-		}
-
-		private static SolidColorBrush GetBrushForTokenCore( PrimitiveRegexTokenKind kind )
-		{
-			switch ( kind )
-			{
-				case PrimitiveRegexTokenKind.OpenSquareBracket:
-				case PrimitiveRegexTokenKind.CloseSquareBracket:
-				case PrimitiveRegexTokenKind.CharacterListNegation:
-					return Brushes.Aquamarine;
-				case PrimitiveRegexTokenKind.RepetitionsCount:
-					return Brushes.CornflowerBlue;
-				case PrimitiveRegexTokenKind.RangeStart:
-				case PrimitiveRegexTokenKind.RangeSymbol:
-				case PrimitiveRegexTokenKind.RangeEnd:
-				case PrimitiveRegexTokenKind.LiteralCharacter:
-					return Brushes.Orange;
-				case PrimitiveRegexTokenKind.LiteralString:
-					return Brushes.Transparent;
-				default:
-					throw new ArgumentOutOfRangeException( "kind" );
 			}
 		}
 	}
