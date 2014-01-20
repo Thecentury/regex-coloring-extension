@@ -64,7 +64,11 @@ namespace RegexParsing
 		private static readonly Parser<RegexToken> _quantifiable = _charList.Or( _verbatim ).Or( Parse.Ref( () => _group ) );
 
 		private static readonly Parser<RegexToken> _group =
-			Parse.Ref( () => _quantified ).Contained( Parse.Char( '(' ), Parse.Char( ')' ) ).Select( t => new Group { Children = t.ToList() } ).Positioned();
+			( from o in Parse.Char( '(' )
+			  from nonCapturing in Parse.String( "?:" ).Optional()
+			  from children in Parse.Ref( () => _quantified )
+			  from c in Parse.Char( ')' )
+			  select new Group { Children = children.ToList(), NonCapturing = nonCapturing.IsDefined } ).Positioned();
 
 		private static IEnumerable<T> AsEnumerable<T>( T t1, IOption<T> t2 )
 		{
@@ -116,6 +120,8 @@ namespace RegexParsing
 		LiteralString,
 
 		GroupStart,
+
+		NonCapturingGroup,
 
 		GroupEnd
 	}
@@ -215,9 +221,16 @@ namespace RegexParsing
 	{
 		public List<RegexToken> Children { get; set; }
 
+		public bool NonCapturing { get; set; }
+
 		public override IEnumerable<PrimitiveRegexToken> GetPrimitiveTokens()
 		{
 			yield return new PrimitiveRegexToken( PrimitiveRegexTokenKind.GroupStart, Offset, 1 );
+
+			if ( NonCapturing )
+			{
+				yield return new PrimitiveRegexToken( PrimitiveRegexTokenKind.NonCapturingGroup, Offset + 1, 2 );
+			}
 
 			foreach ( var item in Children )
 			{

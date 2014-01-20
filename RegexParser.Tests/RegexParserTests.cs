@@ -14,6 +14,7 @@ namespace RegexParsing.Tests
 		[TestCase( "[^a-b23-5]" )]
 		[TestCase( "(a)" )]
 		[TestCase( "(a[a-c])" )]
+		[TestCase( "(?:)" )]
 		public void ShouldParse( string regex )
 		{
 			var tokens = RegexParser.ParseRegex( regex );
