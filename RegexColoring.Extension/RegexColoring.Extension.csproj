@@ -81,6 +81,8 @@
     <Compile Include="RegexExtractor.cs" />
     <Compile Include="SpanExtensions.cs" />
     <Compile Include="WarningTag.cs" />
+    <Compile Include="WarningTagger.cs" />
+    <Compile Include="WarningTaggerFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

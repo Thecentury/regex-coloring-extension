@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 
@@ -13,6 +12,8 @@ namespace RegexParsing.Tests
 		[TestCase( "[a-b23]" )]
 		[TestCase( "[a-b23-5]" )]
 		[TestCase( "[^a-b23-5]" )]
+		[TestCase( "(a)" )]
+		[TestCase( "(a[a-c])" )]
 		public void ShouldParse( string regex )
 		{
 			var tokens = RegexParser.ParseRegex( regex );
