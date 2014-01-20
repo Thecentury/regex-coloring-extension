@@ -8,17 +8,6 @@ using RegexParsing;
 
 namespace RegexColoring.Extension
 {
-	public static class SpanExtensions
-	{
-		public static Span Shift( this Span span, int shift )
-		{
-			return new Span( span.Start + shift, span.Length );
-		}
-	}
-
-	///<summary>
-	/// RegexColoring.Extension places red boxes behind all the "A"s in the editor window
-	///</summary>
 	public class RegexColoringExtension
 	{
 		private readonly IAdornmentLayer _layer;
