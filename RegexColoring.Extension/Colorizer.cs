@@ -31,6 +31,9 @@ namespace RegexColoring.Extension
 					return Brushes.Orange;
 				case PrimitiveRegexTokenKind.LiteralString:
 					return Brushes.Transparent;
+				case PrimitiveRegexTokenKind.GroupStart:
+				case PrimitiveRegexTokenKind.GroupEnd:
+					return Brushes.Thistle;
 				default:
 					throw new ArgumentOutOfRangeException( "kind" );
 			}

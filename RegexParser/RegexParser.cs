@@ -61,7 +61,10 @@ namespace RegexParsing
 			  from close in Parse.Char( ']' )
 			  select new CharList { Items = inner.ToList(), Exclude = exclude.IsDefined } ).Positioned();
 
-		private static readonly Parser<RegexToken> _quantifiable = _charList.Or( _verbatim );
+		private static readonly Parser<RegexToken> _quantifiable = _charList.Or( _verbatim ).Or( Parse.Ref( () => _group ) );
+
+		private static readonly Parser<RegexToken> _group =
+			Parse.Ref( () => _quantified ).Contained( Parse.Char( '(' ), Parse.Char( ')' ) ).Select( t => new Group { Children = t.ToList() } ).Positioned();
 
 		private static IEnumerable<T> AsEnumerable<T>( T t1, IOption<T> t2 )
 		{
@@ -110,7 +113,11 @@ namespace RegexParsing
 
 		LiteralCharacter,
 
-		LiteralString
+		LiteralString,
+
+		GroupStart,
+
+		GroupEnd
 	}
 
 	public sealed class PrimitiveRegexToken
@@ -202,6 +209,26 @@ namespace RegexParsing
 		}
 
 		public abstract IEnumerable<PrimitiveRegexToken> GetPrimitiveTokens();
+	}
+
+	public sealed class Group : RegexToken
+	{
+		public List<RegexToken> Children { get; set; }
+
+		public override IEnumerable<PrimitiveRegexToken> GetPrimitiveTokens()
+		{
+			yield return new PrimitiveRegexToken( PrimitiveRegexTokenKind.GroupStart, Offset, 1 );
+
+			foreach ( var item in Children )
+			{
+				foreach ( var token in item.GetPrimitiveTokens() )
+				{
+					yield return token;
+				}
+			}
+
+			yield return new PrimitiveRegexToken( PrimitiveRegexTokenKind.GroupEnd, Offset + Length - 1, 1 );
+		}
 	}
 
 	public sealed class CharList : RegexToken
