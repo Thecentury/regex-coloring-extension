@@ -16,6 +16,9 @@ namespace RegexParsing.Tests
 		[TestCase( "(a[a-c])" )]
 		[TestCase( "(?:)" )]
 		[TestCase( "<(a|b)" )]
+		[TestCase( "(a)(b)" )]
+		[TestCase( "(?<a>)" )]
+		[TestCase( @"(""?)(b)" )]
 		[TestCase( "<(img|td|table|body)[^>]+?(src|background)=(\"?)(?<path>[^ \">]+).*?>" )]
 		public void ShouldParse( string regex )
 		{
