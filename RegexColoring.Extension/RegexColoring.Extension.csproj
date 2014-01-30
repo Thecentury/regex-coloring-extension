@@ -58,10 +58,6 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="Sprache, Version=1.10.0.35, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Sprache.1.10.0.35\lib\net40\Sprache.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -94,6 +90,10 @@
     <ProjectReference Include="..\RegexParser\RegexParser.csproj">
       <Project>{62AA69A1-65D2-4C33-94B4-209133F11939}</Project>
       <Name>RegexParser</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Sprache\Sprache.csproj">
+      <Project>{df5fe6f0-5abe-4363-9184-eb6ef64f0f61}</Project>
+      <Name>Sprache</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

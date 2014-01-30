@@ -43,7 +43,9 @@ namespace RegexParsing
 
 		private static readonly Parser<RegexToken> _quantifier =
 			Parse.Char( '*' ).Return( new Quantifier { MinAmount = 0 } )
+				.Or( Parse.String( "+?" ).Return( new Quantifier { MinAmount = 1, IsLazy = true } ) )
 				.Or( Parse.Char( '+' ).Return( new Quantifier { MinAmount = 1 } ) )
+				.Or( Parse.String( "*?" ).Return( new Quantifier { MinAmount = 0, IsLazy = true } ) )
 				.Or( Parse.Char( '?' ).Return( new Quantifier { MinAmount = 0, MaxAmount = 1 } ) )
 				.Or(
 					from openBracket in Parse.Char( '{' )
@@ -61,7 +63,28 @@ namespace RegexParsing
 			  from close in Parse.Char( ']' )
 			  select new CharList { Items = inner.ToList(), Exclude = exclude.IsDefined } ).Positioned();
 
-		private static readonly Parser<RegexToken> _quantifiable = _charList.Or( _verbatim ).Or( Parse.Ref( () => _group ) );
+		private static readonly Parser<RegexToken> _quantifiable = _charList.Or( _verbatim ).Or( Parse.Ref( () => _group ) ).DelimitedBy( Parse.Char( '|' ) )
+			.Select( c => ToAlternation( c ) ).Positioned();
+
+		private static RegexToken ToAlternation( IEnumerable<RegexToken> tokens )
+		{
+			var regexTokens = tokens.ToList();
+			if ( regexTokens.Count == 0 )
+			{
+				throw new NotImplementedException( "???" );
+			}
+			else if ( regexTokens.Count == 1 )
+			{
+				return regexTokens[0];
+			}
+			else
+			{
+				return new Alternations
+				{
+					Children = regexTokens
+				};
+			}
+		}
 
 		private static readonly Parser<RegexToken> _group =
 			( from o in Parse.Char( '(' )
@@ -123,7 +146,9 @@ namespace RegexParsing
 
 		NonCapturingGroup,
 
-		GroupEnd
+		GroupEnd,
+
+		Alternation
 	}
 
 	public sealed class PrimitiveRegexToken
@@ -152,15 +177,6 @@ namespace RegexParsing
 		public int Length
 		{
 			get { return _length; }
-		}
-	}
-
-	public static class ImperativePositionAwareExtensions
-	{
-		public static PrimitiveRegexToken ToPrimitiveToken( this IImperativePositionAware positionAware,
-			PrimitiveRegexTokenKind kind )
-		{
-			return new PrimitiveRegexToken( kind, positionAware.Position.Pos, positionAware.Length );
 		}
 	}
 
@@ -215,6 +231,30 @@ namespace RegexParsing
 		}
 
 		public abstract IEnumerable<PrimitiveRegexToken> GetPrimitiveTokens();
+	}
+
+	public sealed class Alternations : RegexToken
+	{
+		public List<RegexToken> Children { get; set; }
+
+		public override IEnumerable<PrimitiveRegexToken> GetPrimitiveTokens()
+		{
+			for ( var i = 0; i < Children.Count; i++ )
+			{
+				var child = Children[i];
+				bool isLast = i == Children.Count - 1;
+
+				foreach ( var token in child.GetPrimitiveTokens() )
+				{
+					yield return token;
+				}
+
+				if ( !isLast )
+				{
+					yield return new PrimitiveRegexToken( PrimitiveRegexTokenKind.Alternation, child.End(), 1 );
+				}
+			}
+		}
 	}
 
 	public sealed class Group : RegexToken
@@ -276,6 +316,8 @@ namespace RegexParsing
 		public int MinAmount { get; set; }
 
 		public int? MaxAmount { get; set; }
+
+		public bool IsLazy { get; set; }
 
 		public override IEnumerable<PrimitiveRegexToken> GetPrimitiveTokens()
 		{
