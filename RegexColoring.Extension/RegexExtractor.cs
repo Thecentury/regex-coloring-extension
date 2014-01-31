@@ -5,7 +5,7 @@ namespace RegexColoring.Extension
 {
 	internal static class RegexExtractor
 	{
-		private static readonly Regex _regexPatternExtractor = new Regex( @"new\s*(?:System\.Text\.RegularExpressions\.|global::System\.Text\.RegularExpressions\.)?Regex\s*\(\s*""(?<pattern>(?:[^""]|\"")*)""\s*[^)]*\)", RegexOptions.Compiled );
+		private static readonly Regex _regexPatternExtractor = new Regex( @"new\s*(?:System\.Text\.RegularExpressions\.|global::System\.Text\.RegularExpressions\.)?Regex\s*\(\s*@?""(?<pattern>(?:[^""]|\\"")*)""[^)]*\)", RegexOptions.Compiled );
 
 		public static Span? TryExtractPatternSpan( string line, out string pattern )
 		{

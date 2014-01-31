@@ -50,15 +50,30 @@ namespace RegexParsing
 				.Or(
 					from openBracket in Parse.Char( '{' )
 					from min in _integer.Optional()
-					from comma in Parse.Char( ',' )
-					from max in _integer.Optional()
+					from max in
+						( from comma in Parse.Char( ',' )
+						  from m in _integer.Optional()
+						  select m ).Optional().Select( o => o.Unwrap() )
 					from closeBracket in Parse.Char( '}' )
 					select new Quantifier { MinAmount = min.GetOrDefault(), MaxAmount = max.AsNullable() }
 				).Positioned();
 
+		private static Parser<RegexToken> CreatePrimitiveTokenParser( string str, PrimitiveRegexTokenKind tokenKind )
+		{
+			return Parse.String( str ).Select( s => new PrimitiveToken( tokenKind ) ).Positioned();
+		}
+
 		private static readonly Parser<RegexToken> _anyChar = Parse.Char( '.' ).Select( c => new PrimitiveToken( PrimitiveRegexTokenKind.AnyChar ) ).Positioned();
 
-		private static readonly Parser<RegexToken> _escape = Parse.String( "\\" ).Select( c => new PrimitiveToken( PrimitiveRegexTokenKind.Escape ) ).Positioned();
+		private static readonly Parser<RegexToken> _escape = CreatePrimitiveTokenParser( "\\", PrimitiveRegexTokenKind.Escape );
+		private static readonly Parser<RegexToken> _digit = CreatePrimitiveTokenParser( @"\d", PrimitiveRegexTokenKind.Digit );
+		private static readonly Parser<RegexToken> _notDigit = CreatePrimitiveTokenParser( @"\D", PrimitiveRegexTokenKind.NotDigit );
+		private static readonly Parser<RegexToken> _whitespace = CreatePrimitiveTokenParser( @"\s", PrimitiveRegexTokenKind.Whitespace );
+		private static readonly Parser<RegexToken> _notWhitespace = CreatePrimitiveTokenParser( @"\S", PrimitiveRegexTokenKind.NotWhitespace );
+		private static readonly Parser<RegexToken> _wordBoundary = CreatePrimitiveTokenParser( @"\b", PrimitiveRegexTokenKind.WordBoundary );
+		private static readonly Parser<RegexToken> _notWordBoundary = CreatePrimitiveTokenParser( @"\B", PrimitiveRegexTokenKind.NotWordBoundary );
+		private static readonly Parser<RegexToken> _wordCharacter = CreatePrimitiveTokenParser( @"\w", PrimitiveRegexTokenKind.WordCharacter );
+		private static readonly Parser<RegexToken> _notWordCharacter = CreatePrimitiveTokenParser( @"\W", PrimitiveRegexTokenKind.NotWordCharacter );
 
 		private static readonly Parser<RegexToken> _charList =
 			( from open in Parse.Char( '[' )
@@ -67,7 +82,10 @@ namespace RegexParsing
 			  from close in Parse.Char( ']' )
 			  select new CharList { Items = inner.ToList(), Exclude = exclude.IsDefined } ).Positioned();
 
-		private static readonly Parser<RegexToken> _quantifiable = _anyChar.Or( _escape ).Or( _charList ).Or( _verbatim ).Or( Parse.Ref( () => _group ) ).DelimitedBy( Parse.Char( '|' ) )
+		private static readonly Parser<RegexToken> _quantifiable =
+			_anyChar.Or( _digit ).Or( _notDigit ).Or( _whitespace ).Or( _notWhitespace )
+			.Or( _wordBoundary ).Or( _notWordBoundary ).Or( _wordCharacter ).Or( _notWordCharacter ).Or( _escape ).Or( _charList ).Or( _verbatim ).Or( Parse.Ref( () => _group ) )
+			.DelimitedBy( Parse.Char( '|' ) )
 			.Select( c => ToAlternation( c ) ).Positioned();
 
 		private static RegexToken ToAlternation( IEnumerable<RegexToken> tokens )
@@ -163,7 +181,23 @@ namespace RegexParsing
 
 		AnyChar,
 
-		Escape
+		Escape,
+
+		Digit,
+
+		NotDigit,
+
+		Whitespace,
+
+		NotWhitespace,
+
+		WordBoundary,
+
+		NotWordBoundary,
+
+		WordCharacter,
+
+		NotWordCharacter
 	}
 
 	public sealed class PrimitiveRegexToken
@@ -343,7 +377,7 @@ namespace RegexParsing
 		}
 	}
 
-	public class Quantifier : RegexToken
+	public sealed class Quantifier : RegexToken
 	{
 		public int MinAmount { get; set; }
 

@@ -10,6 +10,7 @@ namespace RegexParsing.Tests
 		[TestCase( "abc" )]
 		[TestCase( "\\" )]
 		[TestCase( "[a-b]" )]
+		[TestCase( "[a-b]+" )]
 		[TestCase( "[a-b23]" )]
 		[TestCase( "[a-b23-5]" )]
 		[TestCase( "[^a-b23-5]" )]
@@ -19,10 +20,15 @@ namespace RegexParsing.Tests
 		[TestCase( "<(a|b)" )]
 		[TestCase( "(a)(b)" )]
 		[TestCase( "(?<a>)" )]
+		[TestCase( "(?<aa>)" )]
+		[TestCase( @"(?<aa>\d)" )]
+		[TestCase( @"(?<aa>\d{2})" )]
+		[TestCase( "(?<aa>a)(?<aa>a)" )]
+		[TestCase( "(?<aa>a):(?<aa>a)" )]
+		[TestCase( "(?<a>a)" )]
 		[TestCase( "(src|background)=(\"?)" )]
 		[TestCase( @"(""?)(b)" )]
-		[TestCase( "<(img|td|table|body)[^>]+?(src|background)=(\"?)(?<path>[^ \">]+).*?>" )]
-		[TestCase( "<(img|td|table|body)[^>]+?(src|background)=(\\\"?)(?<path>[^ \">]+).*?>" )]
+		[TestCase( @"(?<code>[A-Z\d]{2,3})\s-\s(?<name>[A-Z.\d-]+(?:\s[A-Z.\d-]+)*)" )]
 		public void ShouldParse( string regex )
 		{
 			var tokens = RegexParser.ParseRegex( regex );
