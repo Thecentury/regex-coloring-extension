@@ -8,7 +8,7 @@ namespace RegexParsing
 			return new PrimitiveRegexToken( kind, positionAware.Position.Pos, positionAware.Length );
 		}
 
-		public static int End( this IImperativePositionAware positionAware )
+		public static int GetEnd( this IImperativePositionAware positionAware )
 		{
 			return positionAware.Position.Pos + positionAware.Length;
 		}
