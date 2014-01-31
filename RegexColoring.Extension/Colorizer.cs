@@ -36,6 +36,12 @@ namespace RegexColoring.Extension
 					return Brushes.Thistle;
 				case PrimitiveRegexTokenKind.NonCapturingGroup:
 					return Brushes.CadetBlue;
+				case PrimitiveRegexTokenKind.Alternation:
+					return Brushes.Turquoise;
+				case PrimitiveRegexTokenKind.AnyChar:
+					return Brushes.DarkMagenta;
+				case PrimitiveRegexTokenKind.Escape:
+					return Brushes.DarkOliveGreen;
 				default:
 					throw new ArgumentOutOfRangeException( "kind" );
 			}

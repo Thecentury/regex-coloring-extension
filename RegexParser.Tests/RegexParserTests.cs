@@ -8,6 +8,7 @@ namespace RegexParsing.Tests
 	public sealed class RegexParserTests
 	{
 		[TestCase( "abc" )]
+		[TestCase( "\\" )]
 		[TestCase( "[a-b]" )]
 		[TestCase( "[a-b23]" )]
 		[TestCase( "[a-b23-5]" )]
@@ -18,8 +19,10 @@ namespace RegexParsing.Tests
 		[TestCase( "<(a|b)" )]
 		[TestCase( "(a)(b)" )]
 		[TestCase( "(?<a>)" )]
+		[TestCase( "(src|background)=(\"?)" )]
 		[TestCase( @"(""?)(b)" )]
 		[TestCase( "<(img|td|table|body)[^>]+?(src|background)=(\"?)(?<path>[^ \">]+).*?>" )]
+		[TestCase( "<(img|td|table|body)[^>]+?(src|background)=(\\\"?)(?<path>[^ \">]+).*?>" )]
 		public void ShouldParse( string regex )
 		{
 			var tokens = RegexParser.ParseRegex( regex );

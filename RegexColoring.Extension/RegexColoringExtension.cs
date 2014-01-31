@@ -52,17 +52,17 @@ namespace RegexColoring.Extension
 				return;
 			}
 
-			int shift = line.Start.Position;
-			Span shiftedSpan = patternSpan.Value.Shift( shift );
-
-			SnapshotSpan span = new SnapshotSpan( _view.TextSnapshot, shiftedSpan );
-
 			var result = RegexParser.TryParseRegex( pattern );
 			if ( !result.WasSuccessful )
 			{
 				return;
 			}
 			var tokens = result.Value;
+
+			int shift = line.Start.Position;
+			Span shiftedSpan = patternSpan.Value.Shift( shift );
+
+			SnapshotSpan span = new SnapshotSpan( _view.TextSnapshot, shiftedSpan );
 
 			var primitiveTokens = tokens.SelectMany( t => t.GetPrimitiveTokens() ).ToList();
 
