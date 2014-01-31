@@ -47,6 +47,15 @@ namespace Sprache
             if (option == null) throw new ArgumentNullException("option");
             return option.IsEmpty ? defaultValue : option.Get();
         }
+
+	    public static IOption<T> Unwrap<T>( this IOption<IOption<T>> optionalOption )
+	    {
+		    if ( optionalOption.IsEmpty )
+		    {
+			    return new None<T>();
+		    }
+		    return optionalOption.Get();
+	    }
     }
 
     internal abstract class AbstractOption<T> : IOption<T>

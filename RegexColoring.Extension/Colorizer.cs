@@ -42,6 +42,19 @@ namespace RegexColoring.Extension
 					return Brushes.DarkMagenta;
 				case PrimitiveRegexTokenKind.Escape:
 					return Brushes.DarkOliveGreen;
+				case PrimitiveRegexTokenKind.Digit:
+					return Brushes.DeepSkyBlue;
+				case PrimitiveRegexTokenKind.NotDigit:
+					return Brushes.Chocolate;
+				case PrimitiveRegexTokenKind.Whitespace:
+				case PrimitiveRegexTokenKind.NotWhitespace:
+					return Brushes.SkyBlue;
+				case PrimitiveRegexTokenKind.WordBoundary:
+				case PrimitiveRegexTokenKind.NotWordBoundary:
+					return Brushes.PaleGreen;
+				case PrimitiveRegexTokenKind.WordCharacter:
+				case PrimitiveRegexTokenKind.NotWordCharacter:
+					return Brushes.IndianRed;
 				default:
 					throw new ArgumentOutOfRangeException( "kind" );
 			}
